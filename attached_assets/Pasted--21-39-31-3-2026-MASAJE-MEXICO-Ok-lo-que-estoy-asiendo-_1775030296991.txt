@@ -1,0 +1,27 @@
+[21:39, 31/3/2026] MASAJE MEXICO: Ok lo que estoy asiendo es basicamente replicar lo que es turo.com pero para mexico
+[22:00, 31/3/2026] My Momentum: Se puede hacer si. Tema si eso quieres
+[22:01, 31/3/2026] My Momentum: La quieres igualita con tu logo se puede sin tema existe un skill de clonación de apps ósea que no es gran ten
+[22:01, 31/3/2026] My Momentum: Tema
+[22:09, 31/3/2026] My Momentum: Lo estoy revisando y turo está empaquetado la interface y todo en un repositorio genérico que está en GitHub
+[22:09, 31/3/2026] My Momentum: Solo es comenzar a bajarlo y subirle contenido
+[22:09, 31/3/2026] My Momentum: Poner marca colores y demás
+[02:24, 1/4/2026] MASAJE MEXICO: De lo que veo la app es para vender carros. Es una app para rentar caros. Como Airbnb de carros. Necesita la capacidad de poder agendar.
+[02:24, 1/4/2026] MASAJE MEXICO: Le mando los detalles ya mañana medio día.
+[02:25, 1/4/2026] MASAJE MEXICO: Igual mente le mando los fondos.
+[02:25, 1/4/2026] My Momentum: O ya perfecto si si súper
+[02:25, 1/4/2026] My Momentum: Si ya tiene inventario de una lo podemos cargar desde programación para que lo vaya subiendo uno pro uno
+[02:26, 1/4/2026] MASAJE MEXICO: Bue o la mitad.. igual me mandaras un resume de lo que vaz aser para poder tener lo enescrito de lo que te voy a pagar y lo que me vaz entregar
+[02:28, 1/4/2026] My Momentum: Si si claro con gusto
+[02:28, 1/4/2026] My Momentum: Mira mi empresa es esta
+[02:28, 1/4/2026] My Momentum: Allglobalholding.com
+[02:53, 1/4/2026] MASAJE MEXICO: Rentamerapido.com
+Ve a esta version esta la ise de loviable.ai
+[02:53, 1/4/2026] MASAJE MEXICO: Pero la verdad espere mucho tiempo y se caduco siesta parte entonces solo puedo usar el código para poder mover o utilizar en otro proyecto.
+[02:54, 1/4/2026] MASAJE MEXICO: Estaba batallando en la parte del backend por que aun no estaba completo el proyecto.
+[02:54, 1/4/2026] My Momentum: ok ok
+[02:55, 1/4/2026] My Momentum: le sabes super bien al tema dime en qeu te puedo ayudar a completar tu app aparte de back y font qeu necesitas para dearla avanzada
+[02:55, 1/4/2026] MASAJE MEXICO: Veo que replit es lo mismo. Pero ya con tu ayuda kiero terminar la app.
+[02:56, 1/4/2026] MASAJE MEXICO: Me gusta mucho lo que me mandaste pero veo que es mas simple de lo que kiero aser en el aspecto de que solo es publicar las ventas. Tener la app subir etc.
+[02:57, 1/4/2026] MASAJE MEXICO: El que kiero yo es un poco mas complicado. Tendrá que ver sección donde van a subir su licencia,  los términos condiciones. El seguro quele voy agregar a la app
+[02:57, 1/4/2026] My Momentum: yo ocupo replit por qeu los puede slinear facilmente con github vercel y tienes mas control de asistentes multiples y es una maravilla por lo menos hoy en dia el qeu te acomoda es el mejor
+[02:57, 1/4/2026] MASAJE MEXICO: Y voy a necesitar de su parte un documento

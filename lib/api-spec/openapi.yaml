@@ -1,0 +1,1207 @@
+openapi: 3.1.0
+info:
+  title: AutoSpot API
+  version: 0.2.0
+  description: AutoSpot — Plataforma de renta de autos en Mexico
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: cars
+    description: Car listings
+  - name: bookings
+    description: Booking management
+  - name: users
+    description: User management
+  - name: notifications
+    description: Notification management
+  - name: admin
+    description: Admin operations
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /cars:
+    get:
+      operationId: getCars
+      tags: [cars]
+      summary: Get all car rental listings
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: featured
+          in: query
+          schema:
+            type: boolean
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of rental cars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Car"
+    post:
+      operationId: createCar
+      tags: [cars]
+      summary: Create a new car listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCarInput"
+      responses:
+        "201":
+          description: Created car
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Car"
+
+  /cars/stats:
+    get:
+      operationId: getCarStats
+      tags: [cars]
+      summary: Get rental platform statistics
+      responses:
+        "200":
+          description: Platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CarStats"
+
+  /cars/featured:
+    get:
+      operationId: getFeaturedCars
+      tags: [cars]
+      summary: Get featured car listings
+      responses:
+        "200":
+          description: Featured cars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Car"
+
+  /cars/nearby:
+    get:
+      operationId: getNearbyCars
+      tags: [cars]
+      summary: Get cars near a location
+      parameters:
+        - name: lat
+          in: query
+          schema:
+            type: number
+        - name: lng
+          in: query
+          schema:
+            type: number
+        - name: city
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Nearby cars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Car"
+
+  /cars/{id}:
+    get:
+      operationId: getCarById
+      tags: [cars]
+      summary: Get a single car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Car details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Car"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateCar
+      tags: [cars]
+      summary: Update a car listing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCarInput"
+      responses:
+        "200":
+          description: Updated car
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Car"
+    delete:
+      operationId: deleteCar
+      tags: [cars]
+      summary: Delete a car listing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /cars/{id}/favorite:
+    post:
+      operationId: toggleFavorite
+      tags: [cars]
+      summary: Toggle favorite on a car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Favorite toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoriteResponse"
+
+  /cars/{id}/availability:
+    get:
+      operationId: getCarAvailability
+      tags: [cars]
+      summary: Get booked date ranges for a car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Availability data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailabilityResponse"
+
+  /bookings:
+    get:
+      operationId: getBookings
+      tags: [bookings]
+      summary: List all bookings
+      responses:
+        "200":
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a new booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingInput"
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "409":
+          description: Car not available for those dates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}:
+    get:
+      operationId: getBookingById
+      tags: [bookings]
+      summary: Get a single booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}/status:
+    patch:
+      operationId: updateBookingStatus
+      tags: [bookings]
+      summary: Update booking status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBookingStatusInput"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /users/me:
+    get:
+      operationId: getCurrentUser
+      tags: [users]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/favorites:
+    get:
+      operationId: getUserFavorites
+      tags: [users]
+      summary: Get user's favorite cars
+      responses:
+        "200":
+          description: Favorite cars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Car"
+
+  /users/me/trips:
+    get:
+      operationId: getUserTrips
+      tags: [users]
+      summary: Get current user's bookings/trips
+      responses:
+        "200":
+          description: User trips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+
+  /notifications:
+    get:
+      operationId: getNotifications
+      tags: [notifications]
+      summary: Get all notifications
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Notification marked as read
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200":
+          description: All notifications marked as read
+
+  /cars/{id}/reviews:
+    get:
+      operationId: getCarReviews
+      tags: [cars]
+      summary: Get reviews for a car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of reviews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reviews:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Review"
+                  averageRating:
+                    type: number
+                  totalReviews:
+                    type: integer
+                  ratingBreakdown:
+                    type: object
+                    properties:
+                      "5":
+                        type: integer
+                      "4":
+                        type: integer
+                      "3":
+                        type: integer
+                      "2":
+                        type: integer
+                      "1":
+                        type: integer
+                required:
+                  - reviews
+                  - averageRating
+                  - totalReviews
+                  - ratingBreakdown
+    post:
+      operationId: createReview
+      tags: [cars]
+      summary: Submit a review for a car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewInput"
+      responses:
+        "201":
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get admin statistics
+      responses:
+        "200":
+          description: Admin stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /admin/cars:
+    get:
+      operationId: getAdminCars
+      tags: [admin]
+      summary: Get all cars for admin
+      responses:
+        "200":
+          description: All cars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Car"
+
+  /admin/cars/{id}/status:
+    patch:
+      operationId: updateCarStatus
+      tags: [admin]
+      summary: Update a car's status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStatusInput"
+      responses:
+        "200":
+          description: Updated car
+
+  /admin/cars/{id}/featured:
+    patch:
+      operationId: updateCarFeatured
+      tags: [admin]
+      summary: Toggle car featured status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFeaturedInput"
+      responses:
+        "200":
+          description: Updated car
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+        - message
+
+    CarSpecs:
+      type: object
+      properties:
+        brand:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+        km:
+          type: integer
+        transmission:
+          type: string
+          enum: [manual, automatic, cvt]
+        fuel:
+          type: string
+          enum: [gasoline, diesel, hybrid, electric]
+        color:
+          type: string
+        doors:
+          type: integer
+        horsepower:
+          type: integer
+        engine:
+          type: string
+        seats:
+          type: integer
+      required:
+        - brand
+        - model
+        - year
+        - km
+        - transmission
+        - fuel
+
+    HostInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        whatsapp:
+          type: string
+          nullable: true
+        rating:
+          type: number
+        totalListings:
+          type: integer
+        memberSince:
+          type: string
+        avatar:
+          type: string
+          nullable: true
+        responseTime:
+          type: string
+          nullable: true
+        tripsCompleted:
+          type: integer
+          nullable: true
+      required:
+        - id
+        - name
+        - phone
+
+    Car:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        pricePerDay:
+          type: number
+        depositAmount:
+          type: number
+        location:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+          required:
+            - lat
+            - lng
+        address:
+          type: string
+        city:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        video:
+          type: string
+          nullable: true
+        specs:
+          $ref: "#/components/schemas/CarSpecs"
+        description:
+          type: string
+        host:
+          $ref: "#/components/schemas/HostInfo"
+        features:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+          enum: [economico, suv, deportivo, lujo, trabajo, van, electrico]
+        status:
+          type: string
+          enum: [active, rented, paused]
+        featured:
+          type: boolean
+        badge:
+          type: string
+          nullable: true
+        isFavorited:
+          type: boolean
+        hasVideo:
+          type: boolean
+        instantBook:
+          type: boolean
+        deliveryAvailable:
+          type: boolean
+        deliveryFee:
+          type: number
+          nullable: true
+        minDays:
+          type: integer
+          nullable: true
+        maxDays:
+          type: integer
+          nullable: true
+        mileageLimit:
+          type: integer
+          nullable: true
+        fuelPolicy:
+          type: string
+          enum: [full_to_full, same_fuel_level, charged]
+          nullable: true
+        cleaningFee:
+          type: number
+        rating:
+          type: number
+        reviewCount:
+          type: integer
+        tripsCount:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - title
+        - pricePerDay
+        - depositAmount
+        - location
+        - address
+        - city
+        - images
+        - specs
+        - description
+        - host
+        - features
+        - category
+        - status
+        - featured
+        - isFavorited
+        - hasVideo
+        - instantBook
+        - deliveryAvailable
+        - cleaningFee
+        - rating
+        - reviewCount
+        - tripsCount
+        - createdAt
+        - updatedAt
+
+    CreateCarInput:
+      type: object
+      properties:
+        title:
+          type: string
+        pricePerDay:
+          type: number
+        depositAmount:
+          type: number
+        location:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+          required:
+            - lat
+            - lng
+        address:
+          type: string
+        city:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        video:
+          type: string
+          nullable: true
+        specs:
+          $ref: "#/components/schemas/CarSpecs"
+        description:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+        status:
+          type: string
+        featured:
+          type: boolean
+        badge:
+          type: string
+          nullable: true
+        instantBook:
+          type: boolean
+        deliveryAvailable:
+          type: boolean
+        fuelPolicy:
+          type: string
+        cleaningFee:
+          type: number
+      required:
+        - title
+        - pricePerDay
+        - location
+        - address
+        - city
+        - images
+        - specs
+        - description
+        - category
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+        carId:
+          type: integer
+        renterName:
+          type: string
+        renterPhone:
+          type: string
+        renterEmail:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+        endDate:
+          type: string
+        days:
+          type: integer
+        pricePerDay:
+          type: number
+        subtotal:
+          type: number
+        cleaningFee:
+          type: number
+        serviceFee:
+          type: number
+        insuranceFee:
+          type: number
+        depositAmount:
+          type: number
+        totalAmount:
+          type: number
+        insuranceAdded:
+          type: boolean
+        deliveryRequested:
+          type: boolean
+        status:
+          type: string
+          enum: [pending, confirmed, active, completed, cancelled]
+        notes:
+          type: string
+          nullable: true
+        termsAccepted:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - carId
+        - renterName
+        - renterPhone
+        - startDate
+        - endDate
+        - days
+        - pricePerDay
+        - subtotal
+        - cleaningFee
+        - serviceFee
+        - insuranceFee
+        - depositAmount
+        - totalAmount
+        - insuranceAdded
+        - deliveryRequested
+        - status
+        - termsAccepted
+        - createdAt
+        - updatedAt
+
+    CreateBookingInput:
+      type: object
+      properties:
+        carId:
+          type: string
+        renterName:
+          type: string
+        renterPhone:
+          type: string
+        renterEmail:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+        endDate:
+          type: string
+        insuranceAdded:
+          type: boolean
+        deliveryRequested:
+          type: boolean
+        notes:
+          type: string
+          nullable: true
+        termsAccepted:
+          type: boolean
+      required:
+        - carId
+        - renterName
+        - renterPhone
+        - startDate
+        - endDate
+        - termsAccepted
+
+    UpdateBookingStatusInput:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [confirmed, active, completed, cancelled]
+      required:
+        - status
+
+    AvailabilityResponse:
+      type: object
+      properties:
+        bookedRanges:
+          type: array
+          items:
+            type: object
+            properties:
+              startDate:
+                type: string
+              endDate:
+                type: string
+            required:
+              - startDate
+              - endDate
+      required:
+        - bookedRanges
+
+    FavoriteResponse:
+      type: object
+      properties:
+        isFavorited:
+          type: boolean
+      required:
+        - isFavorited
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        avatar:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        licenseUploaded:
+          type: boolean
+        savedCars:
+          type: array
+          items:
+            type: string
+        memberSince:
+          type: string
+      required:
+        - id
+        - name
+        - email
+        - savedCars
+        - memberSince
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [booking_request, booking_confirmed, price_alert, system, review_received, new_car]
+        title:
+          type: string
+        message:
+          type: string
+        carId:
+          type: string
+          nullable: true
+        read:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - type
+        - title
+        - message
+        - read
+        - createdAt
+
+    CarStats:
+      type: object
+      properties:
+        total:
+          type: integer
+        active:
+          type: integer
+        featured:
+          type: integer
+        cities:
+          type: array
+          items:
+            type: string
+        totalBookings:
+          type: integer
+        confirmedBookings:
+          type: integer
+        completedRevenue:
+          type: number
+      required:
+        - total
+        - active
+        - featured
+        - cities
+        - totalBookings
+        - confirmedBookings
+        - completedRevenue
+
+    AdminStats:
+      type: object
+      properties:
+        totalCars:
+          type: integer
+        activeListing:
+          type: integer
+        totalBookings:
+          type: integer
+        pendingBookings:
+          type: integer
+        totalUsers:
+          type: integer
+        uploadsToday:
+          type: integer
+        featuredListings:
+          type: integer
+        pendingModeration:
+          type: integer
+        revenueThisMonth:
+          type: number
+        uploadsPerDay:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              count:
+                type: integer
+            required:
+              - date
+              - count
+        topCities:
+          type: array
+          items:
+            type: object
+            properties:
+              city:
+                type: string
+              count:
+                type: integer
+            required:
+              - city
+              - count
+      required:
+        - totalCars
+        - activeListing
+        - totalBookings
+        - pendingBookings
+        - totalUsers
+        - uploadsToday
+        - featuredListings
+        - pendingModeration
+        - revenueThisMonth
+        - uploadsPerDay
+        - topCities
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+        carId:
+          type: integer
+        bookingId:
+          type: integer
+          nullable: true
+        reviewerId:
+          type: string
+        reviewerName:
+          type: string
+        reviewerAvatar:
+          type: string
+          nullable: true
+        rating:
+          type: number
+        comment:
+          type: string
+        hostReply:
+          type: string
+          nullable: true
+        hostReplyAt:
+          type: string
+          nullable: true
+        tripDays:
+          type: integer
+          nullable: true
+        tripCity:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - carId
+        - reviewerId
+        - reviewerName
+        - rating
+        - comment
+        - createdAt
+
+    CreateReviewInput:
+      type: object
+      properties:
+        reviewerName:
+          type: string
+        rating:
+          type: number
+        comment:
+          type: string
+        bookingId:
+          type: integer
+          nullable: true
+        tripDays:
+          type: integer
+          nullable: true
+        tripCity:
+          type: string
+          nullable: true
+      required:
+        - reviewerName
+        - rating
+        - comment
+
+    UpdateStatusInput:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, rented, paused]
+      required:
+        - status
+
+    UpdateFeaturedInput:
+      type: object
+      properties:
+        featured:
+          type: boolean
+      required:
+        - featured

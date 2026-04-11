@@ -1,0 +1,50 @@
+{
+  "name": "Rivones — Renta autos en México",
+  "short_name": "Rivones",
+  "description": "Renta autos de forma rápida, segura y premium en todo México. La mejor plataforma de renta de autos entre personas.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1629",
+  "theme_color": "#0f1629",
+  "orientation": "portrait",
+  "categories": ["auto", "travel", "lifestyle"],
+  "lang": "es-MX",
+  "dir": "ltr",
+  "scope": "/",
+  "id": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Explorar autos",
+      "short_name": "Explorar",
+      "url": "/explore",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Planear ruta",
+      "short_name": "Ruta",
+      "url": "/planear-ruta",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Guía Rivones",
+      "short_name": "Guía",
+      "url": "/guia",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    }
+  ]
+}

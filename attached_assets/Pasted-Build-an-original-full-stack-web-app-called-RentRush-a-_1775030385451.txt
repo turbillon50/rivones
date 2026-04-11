@@ -1,0 +1,202 @@
+Build an original full-stack web app called “RentRush” — a peer-to-peer car sharing marketplace inspired by the general business model of car-sharing platforms, but with completely original branding, layout, UI, copy, colors, and code.
+
+Core goal:
+Create a modern responsive marketplace where vehicle owners can list cars and renters can search, book, and pay for trips. The product should feel premium, trustworthy, and mobile-first. Do not copy Turo’s code, wording, page structure, icons, or visual identity. Use original UX and design decisions.
+
+Tech stack:
+- Frontend: React + TypeScript + Tailwind
+- Backend: Node.js + Express
+- Database: PostgreSQL with Prisma ORM
+- Auth: email/password + Google login
+- File uploads: vehicle photos and user profile images
+- Payments: Stripe checkout with deposit support
+- Maps/location: Google Maps or Mapbox
+- Deployment-ready for Replit
+- Seed database with sample users, hosts, cars, reviews, and bookings
+
+Branding:
+- App name: RentRush
+- Market: Mexico first, scalable to Latin America
+- Language support: Spanish and English
+- Currency support: MXN and USD
+- Timezone-aware booking logic
+- Trust-focused design with elegant modern styling
+
+Main user roles:
+1. Guest / renter
+2. Host / car owner
+3. Admin
+
+Essential pages:
+1. Landing page
+   - Hero section with search form
+   - Search by city, airport, address, pickup date/time, return date/time
+   - Featured vehicles
+   - Categories like economy, SUV, luxury, vans, electric
+   - Trust/safety section
+   - How it works for guests and hosts
+   - Testimonials
+   - FAQ
+   - Footer
+
+2. Search results page
+   - Vehicle cards with image, title, year, location, price/day, rating, delivery options
+   - Filters: price, type, transmission, fuel, seats, instant book, delivery available
+   - Sort: price, rating, newest, distance
+   - Map view toggle
+   - Pagination or infinite scroll
+
+3. Vehicle detail page
+   - Large image gallery
+   - Vehicle specs
+   - Pickup/dropoff details
+   - Host profile
+   - Reviews
+   - Booking sidebar with date selection and dynamic pricing
+   - Delivery option
+   - Mileage limit
+   - Protection plan placeholder options
+   - Cancellation policy
+   - “Report listing” link
+
+4. Booking flow
+   - Date/time selector
+   - Real-time availability checks
+   - Price breakdown:
+     - base rental price
+     - cleaning fee
+     - service fee
+     - optional protection plan
+     - refundable deposit
+     - taxes
+   - Stripe payment
+   - Booking confirmation page
+   - Email confirmation placeholder system
+
+5. Host dashboard
+   - Create/edit listing
+   - Upload photos
+   - Set availability calendar
+   - Set daily price, weekend price, discounts, minimum trip length
+   - Delivery radius and fee
+   - Booking requests
+   - Earnings dashboard
+   - Payout settings placeholder
+   - Vehicle performance stats
+
+6. Guest dashboard
+   - Upcoming bookings
+   - Past trips
+   - Saved/favorite cars
+   - Messages
+   - Account verification status
+   - Payment methods placeholder
+
+7. Messaging system
+   - Guest/host thread per booking inquiry
+   - Basic real-time updates if possible
+   - Read/unread states
+
+8. Review system
+   - Guests can review hosts/cars after trip completion
+   - Hosts can review guests
+   - Rating categories: cleanliness, communication, convenience, vehicle condition
+
+9. Admin panel
+   - Manage users
+   - Manage listings
+   - Manage bookings
+   - Moderate reviews
+   - Flagged content
+   - Basic analytics: GMV, bookings, active users, active cars
+
+Data models:
+- User
+- HostProfile
+- Vehicle
+- VehicleImage
+- AvailabilityCalendar
+- Booking
+- Payment
+- Review
+- MessageThread
+- Message
+- Favorite
+- AdminFlag
+- ProtectionPlan
+- PayoutAccount
+
+Important booking logic:
+- Prevent double-booking
+- Validate start/end times
+- Support delivery fee and pickup locations
+- Support security deposit
+- Support instant booking toggle
+- Support trip status: pending, confirmed, active, completed, canceled
+- Support cancellation windows and fee rules
+- Support host approval flow for non-instant bookings
+
+Design requirements:
+- Original design, not visually similar to Turo
+- Premium marketplace feel
+- Rounded cards, clean spacing, strong typography
+- Mobile-first
+- Use subtle animations
+- Accessible color contrast
+- Great UX on Android and iPhone
+- Clean admin UI
+
+Localization requirements:
+- English and Spanish text system
+- Default locale selector in header
+- Prices shown in MXN and optionally USD
+- Future-ready for Mexico cities like Tijuana, CDMX, Guadalajara, Monterrey, Cancun
+
+Legal/safety placeholders:
+- Terms of service page
+- Privacy policy page
+- Host vehicle requirements page
+- Guest eligibility rules page
+- Protection plan disclaimer page
+- Identity verification placeholder
+- Driver’s license upload placeholder
+- Insurance/protection wording must be generic placeholders, not legal promises
+
+Seed sample content:
+- 12 sample vehicles across economy, SUV, luxury, van, and EV categories
+- Include listings in Tijuana, Rosarito, Ensenada, CDMX, Guadalajara
+- Add realistic images placeholders and sample host bios
+- Add sample reviews and bookings
+
+Build quality requirements:
+- Clean file structure
+- Environment variables for Stripe, DB, auth, maps
+- Prisma migrations
+- Form validation
+- Error handling
+- Loading states
+- Toast notifications
+- Rate limiting for auth routes
+- Secure password hashing
+- Basic audit logs for admin actions
+
+Output requirements:
+1. First generate the full project plan and folder structure
+2. Then scaffold backend and database schema
+3. Then scaffold frontend pages and components
+4. Then wire booking logic
+5. Then add authentication
+6. Then add Stripe
+7. Then seed demo data
+8. Then run and fix errors until app works end-to-end
+9. Finally provide:
+   - how to run locally
+   - how to deploy on Replit
+   - demo admin credentials
+   - what still needs production hardening
+
+Very important:
+- Do not clone or copy Turo directly
+- Create original code and original UI
+- Make the MVP functional first, then polish
+- Keep code production-minded and well organized

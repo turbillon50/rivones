@@ -1,0 +1,241 @@
+Build a premium mobile-first web app demo for a car marketplace platform similar to an Airbnb-style experience, but focused on used cars available in different locations.
+
+PROJECT GOAL:
+Create a visually stunning, high-conversion demo app that allows users to browse, explore, and discover used cars through a map-based interface and premium card-based UI. The app must feel like a real startup product ready to scale.
+
+CORE IDEA:
+This is a dynamic car marketplace where each car listing behaves like a “property” in Airbnb:
+- geolocated
+- visual
+- interactive
+- easy to explore
+- designed to convert
+
+IMPORTANT:
+This is a DEMO first, but must be architected to support:
+- real listings
+- dynamic uploads
+- map integrations (Google Maps)
+- user interaction
+- notifications
+- future payments and booking/reservation flows
+
+Use modular structure:
+1. customer frontend
+2. admin / seller dashboard
+3. data + services layer
+4. integrations layer (maps, notifications, media)
+
+TECH STACK:
+- Next.js or React
+- Tailwind CSS
+- Mobile-first
+- PWA-ready
+- Google Maps integration (mocked or placeholder)
+- Mock API for cars and users
+- Service files prepared for future backend
+- Smooth animations
+- Fast performance
+
+DESIGN DIRECTION:
+The UI must feel like:
+- Airbnb meets Tesla meets luxury marketplace
+- premium
+- clean
+- modern
+- card-driven
+- visually rich
+- highly interactive
+
+Avoid generic templates.
+
+Use:
+- large image cards
+- rounded UI
+- shadows and depth
+- smooth transitions
+- map overlays
+- floating actions
+
+APP NAME (DEMO):
+Generate a strong name like:
+“AutoSpot”, “CarBnB”, “DriveMap”, “AutoHub”, “MotoSpace”
+
+MAIN SECTIONS:
+
+1. Splash Screen
+- logo animation
+- premium intro
+
+2. Home / Explore
+- search bar (“¿Qué auto buscas?”)
+- filters (precio, tipo, ciudad)
+- featured cars
+- promotional banners
+- category chips:
+  - Económicos
+  - SUV
+  - Deportivos
+  - Lujo
+  - Trabajo
+  - Nuevos ingresos
+
+3. Map View (CORE FEATURE)
+- Google Maps style layout
+- pins showing car locations
+- tap pin → preview card
+- swipeable listings
+- dynamic loading
+- cluster grouping
+
+4. Car Listing Cards
+Each card must include:
+- main image
+- price
+- location
+- quick specs (km, año, transmisión)
+- badge (nuevo, oferta, destacado)
+- favorite icon
+- video icon if available
+
+5. Car Detail Page
+- image gallery (carousel)
+- video support
+- specs:
+  - marca
+  - modelo
+  - año
+  - km
+  - transmisión
+  - combustible
+- description
+- location map
+- seller info
+- WhatsApp contact button
+- “Agendar visita”
+- “Guardar”
+
+6. Upload / Seller Module
+Allow dynamic listing creation:
+- upload photos
+- upload video
+- add title
+- price
+- location (map picker)
+- description
+- features
+- tags
+- availability
+- status (activo, vendido)
+
+7. Notifications
+- push notification mock:
+  - “Nuevo auto en tu zona”
+  - “Bajó el precio”
+  - “Nuevo mensaje”
+- notification center UI
+
+8. Promotions & Ads
+- banner sections
+- featured listings
+- promoted cars
+- sponsored dealers
+
+9. Profile / User
+- saved cars
+- recently viewed
+- alerts
+- contact history
+
+10. Admin Demo Panel (/admin-demo)
+Show:
+- total cars
+- active listings
+- sold listings
+- user activity
+- uploads per day
+- featured listings control
+- moderation panel
+
+FEATURES TO INCLUDE:
+
+- Map-based browsing (core)
+- Dynamic car uploads
+- Photo + video support
+- Card-based UI (VERY IMPORTANT)
+- Favorite system
+- Filters and search
+- Push notification mock
+- WhatsApp integration button
+- Seller dashboard
+- Premium animations
+- Swipe interactions
+
+DATA STRUCTURE (each car):
+- id
+- title
+- price
+- location (lat/lng)
+- address
+- images
+- video (optional)
+- specs
+- description
+- seller info
+- tags
+- status
+- created date
+
+SERVICES LAYER:
+Prepare:
+- /services/cars.ts
+- /services/users.ts
+- /services/maps.ts
+- /services/notifications.ts
+- /services/media.ts
+- /services/ads.ts
+
+Add comments for:
+- Google Maps API integration
+- push notifications
+- future payment system
+- booking/reservation system
+
+UX DETAILS:
+- floating filter button
+- sticky bottom navigation
+- swipe cards
+- skeleton loaders
+- empty states
+- smooth transitions
+- map/list toggle
+- quick preview modal
+- premium feel
+
+VISUAL STYLE:
+- dark + light hybrid
+- modern gradients
+- clean typography
+- strong imagery
+- high-end marketplace feel
+- no cheap template look
+
+COPY STYLE (Spanish):
+- “Encuentra tu próximo auto”
+- “Explora cerca de ti”
+- “Ver en mapa”
+- “Guardar”
+- “Agendar visita”
+- “Nuevo en tu zona”
+- “Oferta especial”
+
+DELIVERABLE:
+Return a fully runnable demo app with:
+- map-based UI
+- dynamic listings
+- premium cards
+- seller module
+- admin demo panel
+- scalable architecture
+- mobile-first design
+- PWA-ready structure
