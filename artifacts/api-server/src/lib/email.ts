@@ -1,10 +1,16 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
 const FROM_EMAIL = "Rivones <hola@rentamerapido.autos>";
 
 export async function sendWelcomeEmail(to: string, name: string) {
+  if (!resend) {
+    console.warn("Resend not configured, skipping welcome email");
+    return null;
+  }
   const { data, error } = await resend.emails.send({
     from: FROM_EMAIL,
     to,
