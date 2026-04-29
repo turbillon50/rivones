@@ -1,6 +1,6 @@
 {
-  "buildCommand": "PORT=3000 pnpm -r --filter @workspace/autospot run build",
-  "outputDirectory": "artifacts/autospot/dist/public",
+  "buildCommand": "PORT=3000 pnpm -r --filter @workspace/autospot run build && rm -rf public && mv artifacts/autospot/dist/public public",
+  "outputDirectory": "public",
   "installCommand": "pnpm install --no-frozen-lockfile",
   "framework": null,
   "rewrites": [
