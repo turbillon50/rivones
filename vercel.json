@@ -1,5 +1,5 @@
 {
-  "buildCommand": "PORT=3000 pnpm -r --filter @workspace/autospot run build && rm -rf public && (test -d artifacts/autospot/dist/public && mv artifacts/autospot/dist/public ./public || mv dist/public ./public)",
+  "buildCommand": "PORT=3000 pnpm -r --filter @workspace/autospot run build && rm -rf public && find . -path ./node_modules -prune -o -type d -name 'public' -print && OUTPUT=$(find . -path ./node_modules -prune -o -type d -name 'public' -path '*/dist/*' -print | head -1) && echo \"Found at: $OUTPUT\" && cp -r $OUTPUT ./public && ls -la ./public",
   "outputDirectory": "public",
   "installCommand": "pnpm install --no-frozen-lockfile",
   "framework": null,
