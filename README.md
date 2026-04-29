@@ -19,3 +19,4 @@ Built with React + Vite (frontend), Express 5 (API), PostgreSQL + Drizzle ORM, C
 - Google Maps
 - Framer Motion animations
 - PWA support
+
