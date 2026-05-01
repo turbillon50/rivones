@@ -10,7 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { AvailabilityCalendar } from "@/components/booking/AvailabilityCalendar";
+import { apiFetch } from "@/lib/api";
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -111,6 +113,18 @@ export default function CarDetail() {
   const { data: car, isLoading } = useGetCarById(id, {
     query: { enabled: !!id, queryKey: getGetCarByIdQueryKey(id) }
   });
+
+  const [bookedRanges, setBookedRanges] = useState<{ startDate: string; endDate: string }[]>([]);
+  const [blockedDates, setBlockedDates] = useState<string[]>([]);
+  useEffect(() => {
+    if (!id) return;
+    apiFetch<{ bookedRanges: any[]; blockedDates: string[] }>(`/cars/${id}/availability`)
+      .then((d) => {
+        setBookedRanges(d.bookedRanges ?? []);
+        setBlockedDates(d.blockedDates ?? []);
+      })
+      .catch(() => {});
+  }, [id]);
 
   const queryClient = useQueryClient();
   const toggleFavorite = useToggleFavorite({
@@ -310,31 +324,18 @@ export default function CarDetail() {
             <IconCalendar size={18} className="text-primary" />
             Selecciona tus fechas
           </h2>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">Recogida</label>
-              <input
-                type="date"
-                min={today}
-                value={startDate}
-                onChange={(e) => {
-                  setStartDate(e.target.value);
-                  if (endDate && e.target.value > endDate) setEndDate("");
-                }}
-                className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">Entrega</label>
-              <input
-                type="date"
-                min={startDate || today}
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-          </div>
+          <AvailabilityCalendar
+            bookedRanges={bookedRanges}
+            blockedDates={blockedDates}
+            selectedRange={{
+              from: startDate ? new Date(startDate) : undefined,
+              to: endDate ? new Date(endDate) : undefined,
+            }}
+            onSelect={(range) => {
+              setStartDate(range.from ? range.from.toISOString().slice(0, 10) : "");
+              setEndDate(range.to ? range.to.toISOString().slice(0, 10) : "");
+            }}
+          />
 
           {days > 0 && pricing && (
             <div className="mt-4 pt-4 border-t border-border space-y-2">

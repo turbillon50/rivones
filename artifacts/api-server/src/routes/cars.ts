@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { carsTable, bookingsTable } from "@workspace/db/schema";
 import { eq, ilike, gte, lte, and, type SQL, or, not } from "drizzle-orm";
+import { requireAuth, requireAdmin, optionalAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
 
@@ -35,6 +36,9 @@ function carToApi(car: typeof carsTable.$inferSelect) {
     mileageLimit: car.mileageLimit ?? null,
     fuelPolicy: car.fuelPolicy,
     cleaningFee: Number(car.cleaningFee ?? 0),
+    cancellationPolicy: car.cancellationPolicy ?? "moderate",
+    blockedDates: (car.blockedDates as string[]) ?? [],
+    hostUserId: car.hostUserId ?? null,
     rating: Number(car.rating ?? 5.0),
     reviewCount: car.reviewCount ?? 0,
     tripsCount: car.tripsCount ?? 0,
@@ -145,27 +149,51 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// GET /api/cars/:id/availability — check booked dates
+// GET /api/cars/:id/availability — booked ranges + host-blocked dates
 router.get("/:id/availability", async (req, res) => {
   try {
+    const carId = parseInt(req.params.id);
+    if (isNaN(carId)) return res.status(400).json({ error: "bad_request" });
+
+    const [car] = await db.select().from(carsTable).where(eq(carsTable.id, carId));
+    if (!car) return res.status(404).json({ error: "not_found" });
+
     const bookings = await db.select({
       startDate: bookingsTable.startDate,
       endDate: bookingsTable.endDate,
     }).from(bookingsTable).where(
       and(
-        eq(bookingsTable.carId, parseInt(req.params.id)),
+        eq(bookingsTable.carId, carId),
         or(eq(bookingsTable.status, "confirmed"), eq(bookingsTable.status, "active"), eq(bookingsTable.status, "pending")),
       )
     );
-    res.json({ bookedRanges: bookings });
+
+    res.json({
+      bookedRanges: bookings,
+      blockedDates: (car.blockedDates as string[]) ?? [],
+      minDays: car.minDays ?? 1,
+      maxDays: car.maxDays ?? 30,
+      cancellationPolicy: car.cancellationPolicy ?? "moderate",
+    });
   } catch (err) {
     res.status(500).json({ error: "internal_error" });
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   try {
+    const userId = req.auth!.userId;
     const body = req.body;
+
+    // Force the host id to the authenticated user — clients can't impersonate.
+    const incomingHost = body.host ?? body.seller ?? {};
+    const host = {
+      id: userId,
+      name: incomingHost.name ?? req.auth?.email ?? "Anfitrión",
+      phone: incomingHost.phone ?? "",
+      ...(incomingHost.whatsapp ? { whatsapp: incomingHost.whatsapp } : {}),
+    };
+
     const [car] = await db.insert(carsTable).values({
       title: body.title,
       pricePerDay: body.pricePerDay?.toString() ?? body.price?.toString() ?? "0",
@@ -177,17 +205,23 @@ router.post("/", async (req, res) => {
       images: body.images ?? [],
       specs: body.specs,
       description: body.description ?? "",
-      host: body.host ?? body.seller ?? { id: "host-001", name: "Anfitrión", phone: "" },
+      host,
+      hostUserId: userId,
       features: body.features ?? [],
       tags: body.tags ?? [],
       category: body.category ?? "economico",
-      status: body.status ?? "active",
-      featured: body.featured ?? false,
+      // New host listings start in "pending_review" until admin approves them.
+      status: req.auth?.role === "admin" ? (body.status ?? "active") : "pending_review",
+      featured: req.auth?.role === "admin" ? (body.featured ?? false) : false,
       badge: body.badge ?? null,
       instantBook: body.instantBook ?? true,
       fuelPolicy: body.fuelPolicy ?? "full_to_full",
       cleaningFee: body.cleaningFee?.toString() ?? "0",
-    }).returning();
+      cancellationPolicy: ["flexible", "moderate", "strict"].includes(body.cancellationPolicy)
+        ? body.cancellationPolicy
+        : "moderate",
+      blockedDates: Array.isArray(body.blockedDates) ? body.blockedDates : [],
+    } as any).returning();
     res.status(201).json(carToApi(car));
   } catch (err) {
     req.log.error({ err }, "Error creating car");
@@ -195,15 +229,15 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAuth, async (req, res) => {
   try {
-    const adminKey = req.headers["x-admin-key"];
-    if (adminKey !== "autos") {
-      return res.status(403).json({ error: "forbidden", message: "Clave de admin inválida" });
-    }
     const id = parseInt(req.params.id);
+    const userId = req.auth!.userId;
     const [car] = await db.select().from(carsTable).where(eq(carsTable.id, id));
     if (!car) return res.status(404).json({ error: "not_found" });
+    if (car.hostUserId !== userId && req.auth?.role !== "admin" && req.auth?.userId !== "admin-key" && req.auth?.userId !== "admin-legacy") {
+      return res.status(403).json({ error: "forbidden", message: "Solo el anfitrión o un admin pueden eliminar este auto" });
+    }
     await db.delete(carsTable).where(eq(carsTable.id, id));
     res.json({ success: true, deletedId: id });
   } catch (err) {
@@ -212,7 +246,7 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-router.post("/:id/favorite", async (req, res) => {
+router.post("/:id/favorite", requireAuth, async (req, res) => {
   try {
     const [car] = await db.select().from(carsTable).where(eq(carsTable.id, parseInt(req.params.id)));
     if (!car) return res.status(404).json({ error: "not_found" });
@@ -222,6 +256,34 @@ router.post("/:id/favorite", async (req, res) => {
       .returning();
     res.json({ isFavorited: updated.isFavorited });
   } catch (err) {
+    res.status(500).json({ error: "internal_error" });
+  }
+});
+
+// PUT /api/cars/:id/blocked-dates — host updates their car's blocked dates
+router.put("/:id/blocked-dates", requireAuth, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "bad_request" });
+    const { blockedDates } = req.body;
+    if (!Array.isArray(blockedDates)) {
+      return res.status(400).json({ error: "bad_request", message: "blockedDates debe ser un array de fechas YYYY-MM-DD" });
+    }
+    const [car] = await db.select().from(carsTable).where(eq(carsTable.id, id));
+    if (!car) return res.status(404).json({ error: "not_found" });
+    if (car.hostUserId !== req.auth!.userId && req.auth?.role !== "admin") {
+      return res.status(403).json({ error: "forbidden", message: "Solo el anfitrión puede modificar disponibilidad" });
+    }
+    const cleaned = blockedDates
+      .filter((d: unknown) => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d))
+      .slice(0, 730); // cap at ~2 years of dates
+    const [updated] = await db.update(carsTable)
+      .set({ blockedDates: cleaned as any, updatedAt: new Date() })
+      .where(eq(carsTable.id, id))
+      .returning();
+    res.json({ id, blockedDates: updated.blockedDates ?? [] });
+  } catch (err) {
+    req.log.error({ err }, "Error updating blocked dates");
     res.status(500).json({ error: "internal_error" });
   }
 });

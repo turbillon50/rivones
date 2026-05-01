@@ -11,17 +11,80 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
+import { apiFetch } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+
+interface Me {
+  id: string | null;
+  role?: string;
+  licenseStatus?: string;
+  ineStatus?: string;
+  payoutsEnabled?: boolean;
+  stripeAccountId?: string | null;
+}
+
+interface Booking {
+  id: number;
+  carId: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+  totalAmount: string | number;
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: "Pendiente",
+  confirmed: "Confirmada",
+  active: "En curso",
+  completed: "Completada",
+  cancelled: "Cancelada",
+};
+
+const KYC_LABEL: Record<string, string> = {
+  none: "Falta subir",
+  pending: "En revisión",
+  verified: "Verificado ✓",
+  rejected: "Rechazado",
+};
 
 export default function Profile() {
   const { user, signOut } = useAuth();
   const { data: favorites, isLoading: favLoading } = useGetUserFavorites();
+  const { toast } = useToast();
 
   const [isDark, setIsDark] = useState(false);
   const [, setLocation] = useLocation();
+  const [me, setMe] = useState<Me | null>(null);
+  const [rented, setRented] = useState<Booking[]>([]);
+  const [hosted, setHosted] = useState<Booking[]>([]);
+  const [hostedCars, setHostedCars] = useState<any[]>([]);
+  const [connectingStripe, setConnectingStripe] = useState(false);
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
-  }, []);
+    if (user) {
+      apiFetch<Me>("/users/me").then(setMe).catch(() => setMe(null));
+      apiFetch<{ rented: Booking[]; hosted: Booking[] }>("/users/me/bookings")
+        .then((d) => { setRented(d.rented ?? []); setHosted(d.hosted ?? []); })
+        .catch(() => {});
+      apiFetch<any[]>("/users/me/cars").then(setHostedCars).catch(() => setHostedCars([]));
+    }
+  }, [user?.id]);
+
+  const isHost = me?.role === "host" || me?.role === "both";
+  const showKycCta = me && (me.licenseStatus !== "verified" || (isHost && me.ineStatus !== "verified"));
+
+  async function startStripeConnect() {
+    setConnectingStripe(true);
+    try {
+      const data = await apiFetch<{ url: string }>("/stripe/connect/onboard", { method: "POST" });
+      window.location.href = data.url;
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "No se pudo iniciar", description: err.message });
+    } finally {
+      setConnectingStripe(false);
+    }
+  }
 
   const toggleTheme = (checked: boolean) => {
     setIsDark(checked);
@@ -75,18 +138,41 @@ export default function Profile() {
       </div>
 
       <main className="px-4 py-5 space-y-5">
-        {user && (
+        {user && showKycCta && (
           <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 flex items-start gap-3">
             <IconAlertCircle size={18} className="text-amber-600 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm font-bold text-amber-800 dark:text-amber-200">Completa tu perfil</p>
-              <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">Sube tu licencia y documentos para poder hacer reservas</p>
+              <p className="text-sm font-bold text-amber-800 dark:text-amber-200">Completa tu verificación</p>
+              <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                {me?.licenseStatus !== "verified"
+                  ? "Verifica tu licencia para poder reservar autos"
+                  : "Verifica tu INE para publicar autos como anfitrión"}
+              </p>
             </div>
             <button
-              onClick={() => setLocation("/soporte")}
+              onClick={() => setLocation("/kyc")}
               className="bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-amber-700 transition-colors whitespace-nowrap"
             >
-              Subir ahora
+              Verificar
+            </button>
+          </div>
+        )}
+
+        {user && isHost && me && !me.payoutsEnabled && (
+          <div className="bg-primary/5 border border-primary/30 rounded-2xl p-4 flex items-start gap-3">
+            <div className="flex-1">
+              <p className="text-sm font-bold">Conecta tu cuenta para recibir pagos</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Vinculamos tu cuenta bancaria con Stripe Connect (CLABE/MX) para depositarte automáticamente
+                cada renta completada.
+              </p>
+            </div>
+            <button
+              onClick={startStripeConnect}
+              disabled={connectingStripe}
+              className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap disabled:opacity-50"
+            >
+              {connectingStripe ? "…" : me?.stripeAccountId ? "Continuar" : "Conectar"}
             </button>
           </div>
         )}
@@ -102,11 +188,52 @@ export default function Profile() {
           <Switch checked={isDark} onCheckedChange={toggleTheme} />
         </div>
 
-        <Tabs defaultValue="favorites">
+        <Tabs defaultValue="trips">
           <TabsList className="w-full rounded-xl h-11">
+            <TabsTrigger value="trips" className="flex-1 rounded-lg">Mis viajes</TabsTrigger>
+            {isHost && <TabsTrigger value="hosted" className="flex-1 rounded-lg">Como anfitrión</TabsTrigger>}
             <TabsTrigger value="favorites" className="flex-1 rounded-lg">Guardados</TabsTrigger>
             <TabsTrigger value="account" className="flex-1 rounded-lg">Cuenta</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="trips" className="mt-4 space-y-2">
+            {rented.length === 0 ? (
+              <div className="text-center py-10 text-muted-foreground">
+                <p className="text-base font-semibold mb-1">Aún no rentas ningún auto</p>
+                <p className="text-sm">Cuando reserves uno aparecerá aquí.</p>
+              </div>
+            ) : rented.map((b) => (
+              <BookingRow key={b.id} booking={b} role="renter" onOpen={(p) => setLocation(p)} />
+            ))}
+          </TabsContent>
+
+          {isHost && (
+            <TabsContent value="hosted" className="mt-4 space-y-2">
+              {hostedCars.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tus autos</p>
+                  {hostedCars.map((c) => (
+                    <Link key={c.id} href={`/host/calendar/${c.id}`}>
+                      <div className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3">
+                        <img src={c.images?.[0]} alt={c.title} className="w-14 h-14 rounded-xl object-cover" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm line-clamp-1">{c.title}</p>
+                          <p className="text-[11px] text-muted-foreground">Calendario · disponibilidad</p>
+                        </div>
+                        <IconChevronRight size={16} className="text-muted-foreground" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-3">Reservas en tus autos</p>
+              {hosted.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-sm">Sin reservas todavía</div>
+              ) : hosted.map((b) => (
+                <BookingRow key={b.id} booking={b} role="host" onOpen={(p) => setLocation(p)} />
+              ))}
+            </TabsContent>
+          )}
 
           <TabsContent value="favorites" className="mt-4">
             {favLoading ? (
@@ -131,24 +258,26 @@ export default function Profile() {
                 <IconFileText size={16} className="text-muted-foreground shrink-0" />
                 <div>
                   <p className="font-medium text-[13px]">Licencia de conducir</p>
-                  <p className="text-[11px] text-muted-foreground">Pendiente de verificación</p>
+                  <p className="text-[11px] text-muted-foreground">{KYC_LABEL[me?.licenseStatus ?? "none"]}</p>
                 </div>
               </div>
-              <button onClick={() => setLocation("/soporte")} className="text-primary text-[12px] font-semibold shrink-0">
-                Subir
+              <button onClick={() => setLocation("/kyc")} className="text-primary text-[12px] font-semibold shrink-0">
+                {me?.licenseStatus === "verified" ? "Ver" : "Subir"}
               </button>
             </div>
 
-            <div className="bg-card border border-border rounded-2xl px-4 py-3 flex items-center justify-between" onClick={() => setLocation("/soporte")}>
-              <div className="flex items-center gap-3">
-                <IconUpload size={16} className="text-muted-foreground shrink-0" />
-                <div>
-                  <p className="font-medium text-[13px]">Documentos e identidad</p>
-                  <p className="text-[11px] text-muted-foreground">Agrega tu INE o pasaporte</p>
+            {isHost && (
+              <div className="bg-card border border-border rounded-2xl px-4 py-3 flex items-center justify-between cursor-pointer" onClick={() => setLocation("/kyc")}>
+                <div className="flex items-center gap-3">
+                  <IconUpload size={16} className="text-muted-foreground shrink-0" />
+                  <div>
+                    <p className="font-medium text-[13px]">INE / Identificación oficial</p>
+                    <p className="text-[11px] text-muted-foreground">{KYC_LABEL[me?.ineStatus ?? "none"]}</p>
+                  </div>
                 </div>
+                <IconChevronRight size={16} className="text-muted-foreground" />
               </div>
-              <IconChevronRight size={16} className="text-muted-foreground" />
-            </div>
+            )}
 
             <Link href="/user">
               <div className="bg-card border border-border rounded-2xl px-4 py-3 flex items-center justify-between">
@@ -202,6 +331,31 @@ export default function Profile() {
       </main>
 
       <BottomNav />
+    </div>
+  );
+}
+
+function BookingRow({ booking, role, onOpen }: { booking: Booking; role: "renter" | "host"; onOpen: (path: string) => void }) {
+  const status = booking.status;
+  return (
+    <div className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold">Reserva #{booking.id}</p>
+        <p className="text-[11px] text-muted-foreground">{booking.startDate} → {booking.endDate}</p>
+        <p className="mt-0.5 text-[11px] font-semibold text-primary">{STATUS_LABEL[status] ?? status}</p>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <button onClick={() => onOpen(`/booking/${booking.id}/chat`)} className="text-[11px] text-primary font-semibold">Chat</button>
+        {role === "renter" && status === "confirmed" && (
+          <button onClick={() => onOpen(`/booking/${booking.id}/pickup`)} className="text-[11px] text-primary font-semibold">Recoger</button>
+        )}
+        {role === "renter" && status === "active" && (
+          <button onClick={() => onOpen(`/booking/${booking.id}/return`)} className="text-[11px] text-primary font-semibold">Devolver</button>
+        )}
+        {status === "completed" && (
+          <button onClick={() => onOpen(`/booking/${booking.id}/review`)} className="text-[11px] text-primary font-semibold">Reseñar</button>
+        )}
+      </div>
     </div>
   );
 }

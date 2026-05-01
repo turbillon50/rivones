@@ -130,6 +130,75 @@ export async function runMigrations(): Promise<void> {
       );
     `);
 
+    // cars: host_user_id + cancellation_policy + blocked_dates
+    await client.query(`ALTER TABLE cars ADD COLUMN IF NOT EXISTS host_user_id TEXT;`);
+    await client.query(`ALTER TABLE cars ADD COLUMN IF NOT EXISTS cancellation_policy TEXT NOT NULL DEFAULT 'moderate';`);
+    await client.query(`ALTER TABLE cars ADD COLUMN IF NOT EXISTS blocked_dates JSONB NOT NULL DEFAULT '[]'::jsonb;`);
+    await client.query(`CREATE INDEX IF NOT EXISTS cars_host_user_id_idx ON cars (host_user_id);`);
+
+    // ── users table ─────────────────────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id                SERIAL PRIMARY KEY,
+        clerk_user_id     TEXT NOT NULL UNIQUE,
+        role              TEXT NOT NULL DEFAULT 'renter',
+        display_name      TEXT,
+        email             TEXT,
+        phone             TEXT,
+        avatar            TEXT,
+        license_status    TEXT NOT NULL DEFAULT 'none',
+        license_doc_id    INTEGER,
+        ine_status        TEXT NOT NULL DEFAULT 'none',
+        ine_doc_id        INTEGER,
+        rfc               TEXT,
+        stripe_account_id TEXT,
+        payouts_enabled   BOOLEAN NOT NULL DEFAULT false,
+        blocked           BOOLEAN NOT NULL DEFAULT false,
+        blocked_reason    TEXT,
+        created_at        TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at        TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS users_email_idx ON users (email);`);
+
+    // ── messages table ──────────────────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id                  SERIAL PRIMARY KEY,
+        booking_id          INTEGER NOT NULL,
+        sender_user_id      TEXT NOT NULL,
+        recipient_user_id   TEXT NOT NULL,
+        body                TEXT NOT NULL,
+        read_at             TIMESTAMP,
+        system              BOOLEAN NOT NULL DEFAULT false,
+        created_at          TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS messages_booking_id_idx ON messages (booking_id);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS messages_recipient_idx ON messages (recipient_user_id, read_at);`);
+
+    // ── trip_inspections table ──────────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS trip_inspections (
+        id                    SERIAL PRIMARY KEY,
+        booking_id            INTEGER NOT NULL,
+        type                  TEXT NOT NULL,
+        recorded_by_user_id   TEXT NOT NULL,
+        odometer_km           INTEGER,
+        fuel_level            TEXT,
+        photos                JSONB NOT NULL DEFAULT '[]'::jsonb,
+        notes                 TEXT,
+        damage_report         TEXT,
+        damage_amount         NUMERIC(10,2),
+        created_at            TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS trip_inspections_booking_id_idx ON trip_inspections (booking_id);`);
+
+    // ── reviews: add reviewer_type for bidirectional reviews ────────────────
+    await client.query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS reviewer_type TEXT NOT NULL DEFAULT 'renter';`);
+    await client.query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS visible_at TIMESTAMP;`);
+
     await client.query("COMMIT");
     logger.info("Schema migrations complete");
   } catch (err) {

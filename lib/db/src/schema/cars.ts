@@ -28,7 +28,10 @@ export const carsTable = pgTable("cars", {
     seats?: number;
   }>().notNull(),
   description: text("description").notNull(),
-  // Renamed from seller → host
+  // Foreign key to users.clerkUserId. Cars created before users existed have null.
+  hostUserId: text("host_user_id"),
+  // Denormalized host info shown in listings (name, phone, avatar).
+  // Source of truth is the users table; this is a snapshot for fast reads.
   host: jsonb("host").$type<{
     id: string;
     name: string;
@@ -58,6 +61,10 @@ export const carsTable = pgTable("cars", {
   mileageLimit: integer("mileage_limit"),
   fuelPolicy: text("fuel_policy").notNull().default("full_to_full"),
   cleaningFee: numeric("cleaning_fee", { precision: 8, scale: 2 }).notNull().default("0"),
+  // Cancellation policy chosen by the host: "flexible" | "moderate" | "strict"
+  cancellationPolicy: text("cancellation_policy").notNull().default("moderate"),
+  // ISO YYYY-MM-DD dates the host has blocked out (vacation, personal use).
+  blockedDates: jsonb("blocked_dates").$type<string[]>().notNull().default([]),
   rating: numeric("rating", { precision: 3, scale: 2 }).notNull().default("5.0"),
   reviewCount: integer("review_count").notNull().default(0),
   tripsCount: integer("trips_count").notNull().default(0),

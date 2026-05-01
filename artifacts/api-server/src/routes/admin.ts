@@ -2,17 +2,9 @@ import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { carsTable, bookingsTable, notificationsTable, reviewsTable, partnersTable, documentsTable } from "@workspace/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { requireAdmin } from "../middleware/auth";
 
 const router: IRouter = Router();
-
-const ADMIN_KEY = "autos";
-
-function requireAdmin(req: any, res: any, next: any) {
-  if (req.headers["x-admin-key"] !== ADMIN_KEY) {
-    return res.status(403).json({ error: "forbidden" });
-  }
-  next();
-}
 
 function carToApi(car: typeof carsTable.$inferSelect) {
   return {
