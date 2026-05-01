@@ -4,7 +4,8 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM_EMAIL = "Rivones <hola@rentamerapido.autos>";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Rivones <onboarding@resend.dev>";
+const PLATFORM_BASE_URL = process.env.PLATFORM_BASE_URL ?? "https://example.com";
 
 export async function sendWelcomeEmail(to: string, name: string) {
   if (!resend) {
@@ -40,7 +41,7 @@ export async function sendWelcomeEmail(to: string, name: string) {
         <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
           <tr>
             <td style="background:linear-gradient(135deg,#00b8d9,#00d4ff);border-radius:12px;padding:14px 32px;">
-              <a href="https://rentamerapido.autos" style="color:#0f1629;text-decoration:none;font-size:16px;font-weight:600;">Explorar autos</a>
+              <a href="${PLATFORM_BASE_URL}/explore" style="color:#0f1629;text-decoration:none;font-size:16px;font-weight:600;">Explorar autos</a>
             </td>
           </tr>
         </table>
@@ -53,7 +54,7 @@ export async function sendWelcomeEmail(to: string, name: string) {
     <tr>
       <td style="background:#0f1629;padding:24px 32px;text-align:center;">
         <p style="color:#475569;font-size:12px;margin:0;">
-          © ${new Date().getFullYear()} Rivones · rentamerapido.autos
+          © ${new Date().getFullYear()} Rivones
         </p>
       </td>
     </tr>

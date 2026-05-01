@@ -2,10 +2,14 @@
 
 Premium car rental marketplace for Mexico — Turo-style.
 
-Built with React + Vite (frontend), Express 5 (API), PostgreSQL + Drizzle ORM, Clerk auth, Stripe payments and Stripe Connect for host payouts, Resend for transactional email, Google Maps, and Framer Motion.
+Built with React + Vite (frontend), Express 5 (API, deployable as Vercel
+Function), Neon Postgres + Drizzle ORM, Clerk auth, Stripe + Stripe Connect
+for host payouts, Resend for transactional email, Google Maps, Framer Motion.
+
+For deploy step-by-step see **[DEPLOY.md](./DEPLOY.md)**.
 
 ## Brand
-- **Domain**: rentamerapido.autos
+- **Domain**: configurable via env (`CORS_ALLOWED_DOMAIN`, `PLATFORM_BASE_URL`, `VITE_PRODUCTION_HOST`)
 - **Colors**: Deep navy (#0f1629), Cyan (#00d4ff), Chrome silver
 - **Language**: Spanish (Mexico market)
 
@@ -126,10 +130,16 @@ pnpm test            # vitest in api-server (where present)
 
 ## Deployment
 
-The repo deploys two artifacts:
+Both artifacts deploy to **Vercel** as separate projects:
 
-- **autospot** (frontend) → Vercel via `vercel.json` (Vite SPA, output to `/public`).
-- **api-server** (backend) → Replit Deployments. Run migrations + seed on startup via `runMigrations` in `src/index.ts`.
+- **autospot** (frontend) — Root `artifacts/autospot`, Vite SPA output.
+- **api-server** (backend) — Root `artifacts/api-server`, exposed as a single
+  Vercel Function (`api/index.ts` re-exports the Express `app`). Migrations
+  run lazily on cold start.
+
+Database is **Neon** Postgres (use the pooled connection string).
+
+The full step-by-step is in **[DEPLOY.md](./DEPLOY.md)**.
 
 ## Known gaps to close before public launch
 

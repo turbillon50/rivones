@@ -27,7 +27,8 @@ interface DispatchInput {
 }
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Rivones <hola@rentamerapido.autos>";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Rivones <onboarding@resend.dev>";
+const PLATFORM_BASE_URL = process.env.PLATFORM_BASE_URL ?? "https://example.com";
 
 /**
  * Persist a notification row + (optionally) send a transactional email.
@@ -73,8 +74,8 @@ export async function dispatchNotification(input: DispatchInput): Promise<void> 
 
 function renderEmail(input: DispatchInput): string {
   const cta = input.bookingId
-    ? `https://rentamerapido.autos/booking/${input.bookingId}`
-    : "https://rentamerapido.autos/explore";
+    ? `${PLATFORM_BASE_URL}/booking/${input.bookingId}`
+    : `${PLATFORM_BASE_URL}/explore`;
   return `<!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#0f1629;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;">
@@ -89,7 +90,7 @@ function renderEmail(input: DispatchInput): string {
       <a href="${cta}" style="display:inline-block;background:linear-gradient(135deg,#00b8d9,#00d4ff);color:#0f1629;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:10px;">Ver en Rivones</a>
     </td></tr>
     <tr><td style="background:#0f1629;padding:18px;text-align:center;color:#475569;font-size:11px;">
-      © ${new Date().getFullYear()} Rivones · rentamerapido.autos
+      © ${new Date().getFullYear()} Rivones
     </td></tr>
   </table>
 </body></html>`;

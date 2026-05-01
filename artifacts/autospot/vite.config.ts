@@ -61,6 +61,16 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
+    // Proxy /api → local Express in dev so the frontend doesn't need CORS or
+    // VITE_API_BASE_URL to be set during local development.
+    proxy: process.env.VITE_API_PROXY
+      ? {
+          "/api": {
+            target: process.env.VITE_API_PROXY,
+            changeOrigin: true,
+          },
+        }
+      : undefined,
   },
   preview: {
     port,

@@ -1,4 +1,6 @@
-const API_BASE = "/api";
+// In dev, Vite proxies /api to the local Express server.
+// In prod, set VITE_API_BASE_URL to the API origin (e.g. https://api.example.com).
+const API_BASE = (import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "") + "/api";
 
 type TokenGetter = () => Promise<string | null>;
 

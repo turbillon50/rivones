@@ -47,23 +47,28 @@ app.use(
 );
 
 // CORS — whitelist driven by env. CORS_ALLOWED_ORIGINS is comma-separated.
+// CORS_ALLOWED_DOMAIN is the apex production domain; any subdomain is allowed.
 // In dev (no env set) we allow everything to keep DX simple.
 const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? "")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
 
+const allowedDomain = process.env.CORS_ALLOWED_DOMAIN?.trim() || null;
+
 app.use(
   cors({
     origin: (origin, cb) => {
       if (!origin) return cb(null, true); // server-to-server, curl, mobile apps
-      if (allowedOrigins.length === 0) return cb(null, true); // dev fallback
+      if (allowedOrigins.length === 0 && !allowedDomain) return cb(null, true); // dev fallback
       if (allowedOrigins.includes(origin)) return cb(null, true);
-      // Allow any *.rentamerapido.autos and *.vercel.app preview by default
       try {
         const u = new URL(origin);
-        if (u.hostname.endsWith(".rentamerapido.autos")) return cb(null, true);
-        if (u.hostname === "rentamerapido.autos") return cb(null, true);
+        if (allowedDomain) {
+          if (u.hostname === allowedDomain) return cb(null, true);
+          if (u.hostname.endsWith(`.${allowedDomain}`)) return cb(null, true);
+        }
+        // Vercel preview deploys are always allowed so PRs can be tested.
         if (u.hostname.endsWith(".vercel.app")) return cb(null, true);
       } catch {}
       return cb(new Error(`origin_not_allowed:${origin}`));
