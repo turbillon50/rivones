@@ -27,6 +27,16 @@ import GuiaRegistro from "@/pages/guia-registro";
 import RoutePlanner from "@/pages/route-planner";
 import UserProfilePage from "@/pages/user-profile";
 import NotFound from "@/pages/not-found";
+import KycPage from "@/pages/kyc";
+import BookingChat from "@/pages/booking-chat";
+import TripPickup from "@/pages/trip-pickup";
+import TripReturn from "@/pages/trip-return";
+import ReviewPage from "@/pages/review";
+import HostCalendar from "@/pages/host-calendar";
+
+import { RequireAuth } from "@/components/auth/RequireAuth";
+import { ClerkAuthBridge } from "@/components/auth/ClerkAuthBridge";
+import { CookieConsent } from "@/components/legal/CookieConsent";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,14 +67,42 @@ function Router() {
       <Route path="/explore" component={Explore} />
       <Route path="/map" component={MapView} />
       <Route path="/car/:id" component={CarDetail} />
-      <Route path="/booking/:carId" component={Booking} />
-      <Route path="/upload" component={Upload} />
-      <Route path="/notifications" component={Notifications} />
-      <Route path="/profile" component={Profile} />
+      <Route path="/booking/:carId">
+        {(params) => <RequireAuth><Booking /></RequireAuth>}
+      </Route>
+      <Route path="/booking/:bookingId/chat">
+        {(params) => <RequireAuth><BookingChat /></RequireAuth>}
+      </Route>
+      <Route path="/booking/:bookingId/pickup">
+        {(params) => <RequireAuth><TripPickup /></RequireAuth>}
+      </Route>
+      <Route path="/booking/:bookingId/return">
+        {(params) => <RequireAuth><TripReturn /></RequireAuth>}
+      </Route>
+      <Route path="/booking/:bookingId/review">
+        {(params) => <RequireAuth><ReviewPage /></RequireAuth>}
+      </Route>
+      <Route path="/upload">
+        {() => <RequireAuth><Upload /></RequireAuth>}
+      </Route>
+      <Route path="/notifications">
+        {() => <RequireAuth><Notifications /></RequireAuth>}
+      </Route>
+      <Route path="/profile">
+        {() => <RequireAuth><Profile /></RequireAuth>}
+      </Route>
+      <Route path="/kyc">
+        {() => <RequireAuth><KycPage /></RequireAuth>}
+      </Route>
+      <Route path="/host/calendar/:carId">
+        {() => <RequireAuth><HostCalendar /></RequireAuth>}
+      </Route>
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/sign-in" component={SignInPage} />
       <Route path="/sign-up" component={SignUpPage} />
-      <Route path="/onboarding" component={Onboarding} />
+      <Route path="/onboarding">
+        {() => <RequireAuth><Onboarding /></RequireAuth>}
+      </Route>
       <Route path="/terminos" component={Terminos} />
       <Route path="/privacidad" component={Privacidad} />
       <Route path="/cancelaciones" component={Cancelaciones} />
@@ -91,11 +129,13 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <ClerkAuthBridge />
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <Router />
         </WouterRouter>
         <Toaster />
+        <CookieConsent />
       </TooltipProvider>
     </QueryClientProvider>
   );

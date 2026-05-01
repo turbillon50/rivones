@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { partnersTable } from "@workspace/db/schema";
 import { eq, ilike, and, type SQL, desc } from "drizzle-orm";
+import { requireAdmin, optionalAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
 
@@ -49,15 +50,19 @@ function partnerToAdmin(p: typeof partnersTable.$inferSelect) {
   };
 }
 
-function isAdmin(req: any): boolean {
-  const role = req.headers["x-autospot-role"];
-  return role === "admin";
+function isAdminReq(req: any): boolean {
+  // True when an admin auth context is attached. The actual gating happens
+  // via requireAdmin on the mutation routes; this helper just decides whether
+  // to expose admin-only fields on read endpoints.
+  return req.auth?.role === "admin"
+    || req.auth?.userId === "admin-key"
+    || req.auth?.userId === "admin-legacy";
 }
 
-router.get("/", async (req, res) => {
+router.get("/", optionalAuth, async (req, res) => {
   try {
     const { category, city, featured } = req.query;
-    const admin = isAdmin(req);
+    const admin = isAdminReq(req);
     const statusFilter = admin ? (req.query.status as string || "pending") : "approved";
     const conditions: SQL[] = [eq(partnersTable.status, statusFilter)];
 
@@ -85,15 +90,16 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", optionalAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: "bad_request" });
     const [partner] = await db.select().from(partnersTable).where(eq(partnersTable.id, id));
     if (!partner) return res.status(404).json({ error: "not_found" });
 
-    const mapper = isAdmin(req) ? partnerToAdmin : partnerToPublic;
-    if (!isAdmin(req) && partner.status !== "approved") {
+    const admin = isAdminReq(req);
+    const mapper = admin ? partnerToAdmin : partnerToPublic;
+    if (!admin && partner.status !== "approved") {
       return res.status(404).json({ error: "not_found" });
     }
     res.json(mapper(partner));
@@ -155,8 +161,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.patch("/:id/approve", async (req, res) => {
-  if (!isAdmin(req)) return res.status(403).json({ error: "forbidden" });
+router.patch("/:id/approve", requireAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: "bad_request" });
@@ -173,8 +178,7 @@ router.patch("/:id/approve", async (req, res) => {
   }
 });
 
-router.patch("/:id/reject", async (req, res) => {
-  if (!isAdmin(req)) return res.status(403).json({ error: "forbidden" });
+router.patch("/:id/reject", requireAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: "bad_request" });
@@ -192,8 +196,7 @@ router.patch("/:id/reject", async (req, res) => {
   }
 });
 
-router.patch("/:id/featured", async (req, res) => {
-  if (!isAdmin(req)) return res.status(403).json({ error: "forbidden" });
+router.patch("/:id/featured", requireAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: "bad_request" });
@@ -210,8 +213,7 @@ router.patch("/:id/featured", async (req, res) => {
   }
 });
 
-router.patch("/:id/ad-payment", async (req, res) => {
-  if (!isAdmin(req)) return res.status(403).json({ error: "forbidden" });
+router.patch("/:id/ad-payment", requireAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: "bad_request" });
@@ -227,8 +229,7 @@ router.patch("/:id/ad-payment", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
-  if (!isAdmin(req)) return res.status(403).json({ error: "forbidden" });
+router.delete("/:id", requireAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: "bad_request" });

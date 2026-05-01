@@ -15,6 +15,11 @@ export const reviewsTable = pgTable("reviews", {
   hostReplyAt: timestamp("host_reply_at"),
   tripDays: integer("trip_days"),
   tripCity: text("trip_city"),
+  // "renter" = guest reviewing the car/host. "host" = host reviewing the renter.
+  reviewerType: text("reviewer_type").notNull().default("renter"),
+  // Reviews are hidden until both parties submit OR the 14-day window passes.
+  // visibleAt = the timestamp the review becomes public. Null = not visible yet.
+  visibleAt: timestamp("visible_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

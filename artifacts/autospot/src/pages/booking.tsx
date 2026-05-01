@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { RentalPaymentForm } from "@/components/booking/RentalPaymentForm";
+import { apiFetch } from "@/lib/api";
 
 export default function Booking() {
   const params = useParams();
@@ -58,10 +59,22 @@ export default function Booking() {
 
     setIsSubmitting(true);
     try {
-      const BASE = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
-      const res = await fetch(`${BASE}/api/bookings`, {
+      // Pre-flight: confirm dates are still available before showing the payment form.
+      // This avoids the bad UX of charging the card and then refunding because the
+      // host's calendar changed in the meantime.
+      try {
+        const quote = await apiFetch<any>("/bookings/quote", {
+          method: "POST",
+          body: JSON.stringify({ carId, startDate, endDate, insuranceAdded: insurance, deliveryRequested: delivery }),
+        });
+        if (!quote.available) {
+          toast({ variant: "destructive", title: "No disponible", description: "Las fechas ya no están disponibles. Elige otras." });
+          return;
+        }
+      } catch { /* fall through and let the create call decide */ }
+
+      const booking = await apiFetch<any>("/bookings", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           carId,
           renterName: name,
@@ -76,17 +89,6 @@ export default function Booking() {
         }),
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        if (res.status === 409) {
-          toast({ variant: "destructive", title: "No disponible", description: "El auto no está disponible para esas fechas. Por favor elige otras." });
-          return;
-        }
-        throw new Error(err.message ?? "Error al crear la reserva");
-      }
-
-      const booking = await res.json();
-
       const depAmt = Number(car?.depositAmount ?? 0);
       const totalAmt = pricing?.total ?? 0;
       if (totalAmt > 0 || depAmt > 0) {
@@ -95,6 +97,21 @@ export default function Booking() {
         setConfirmed({ id: booking.id, status: booking.status });
       }
     } catch (err: any) {
+      const code = err.code as string | undefined;
+      if (code === "license_unverified") {
+        toast({ variant: "destructive", title: "Verifica tu licencia", description: "Necesitas verificar tu licencia antes de reservar.", action: undefined });
+        navigate("/kyc");
+        return;
+      }
+      if (code === "not_available" || code === "host_blocked_dates") {
+        toast({ variant: "destructive", title: "No disponible", description: err.message });
+        return;
+      }
+      if (err.status === 401) {
+        toast({ variant: "destructive", title: "Inicia sesión", description: "Inicia sesión para reservar." });
+        navigate("/sign-in");
+        return;
+      }
       toast({ variant: "destructive", title: "Error", description: err.message ?? "Inténtalo de nuevo" });
     } finally {
       setIsSubmitting(false);
@@ -301,6 +318,10 @@ export default function Booking() {
                   {car && <span className="text-sm font-bold text-primary">+{formatCurrency(Math.round(car.pricePerDay * 0.18))}/día</span>}
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">Cobertura extendida en caso de accidente, robo o daños. Deducible reducido.</p>
+                <p className="mt-1.5 text-[10px] text-muted-foreground/70 leading-relaxed">
+                  Cobertura provista por la póliza del anfitrión durante el periodo de renta. Conserva el recibo
+                  para cualquier reclamación. Consulta los <a href="/terminos" className="underline">términos</a>.
+                </p>
               </div>
               <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${insurance ? "border-primary bg-primary" : "border-muted-foreground"}`}>
                 {insurance && <IconCheck size={12} className="text-white" />}

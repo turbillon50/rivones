@@ -1,8 +1,21 @@
 openapi: 3.1.0
 info:
-  title: AutoSpot API
-  version: 0.2.0
-  description: AutoSpot — Plataforma de renta de autos en Mexico
+  title: Rivones API
+  version: 0.3.0
+  description: |
+    Rivones — Plataforma de renta de autos en México (Turo-style).
+
+    Routes documented below cover the core marketplace surface used by the
+    autospot frontend (cars, bookings, users, admin, notifications, reviews).
+
+    Additional endpoints exist in the server but are not yet in this spec:
+      - /api/bookings/quote, /api/bookings/:id/messages, /api/bookings/:id/inspections
+      - /api/cars/:id/blocked-dates, /api/cars/:id/availability (extended)
+      - /api/stripe/webhook, /api/stripe/connect/onboard, /api/stripe/connect/status
+      - /api/stripe/create-deposit-hold, release-deposit, capture-deposit
+      - /api/documents/:id/status, /api/storage/uploads/request-url
+      - /api/email/welcome
+    These will be added in a follow-up codegen pass.
 servers:
   - url: /api
     description: Base API path

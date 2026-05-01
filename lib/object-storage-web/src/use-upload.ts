@@ -1,6 +1,27 @@
 import { useState, useCallback } from "react";
 import type { UppyFile } from "@uppy/core";
 
+type AuthHeadersGetter = () => Promise<Record<string, string>>;
+let authHeadersGetter: AuthHeadersGetter | null = null;
+
+/**
+ * Injected by the host app (ClerkAuthBridge) so request-url calls include the
+ * Bearer JWT. Optional — when not set, requests go out unauthenticated and the
+ * server may reject them.
+ */
+export function setUploadAuthHeadersGetter(getter: AuthHeadersGetter | null) {
+  authHeadersGetter = getter;
+}
+
+async function buildAuthHeaders(): Promise<Record<string, string>> {
+  if (!authHeadersGetter) return {};
+  try {
+    return await authHeadersGetter();
+  } catch {
+    return {};
+  }
+}
+
 interface UploadMetadata {
   name: string;
   size: number;
@@ -61,10 +82,12 @@ export function useUpload(options: UseUploadOptions = {}) {
 
   const requestUploadUrl = useCallback(
     async (file: File): Promise<UploadResponse> => {
+      const authHeaders = await buildAuthHeaders();
       const response = await fetch(`${basePath}/uploads/request-url`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...authHeaders,
         },
         body: JSON.stringify({
           name: file.name,
@@ -136,10 +159,12 @@ export function useUpload(options: UseUploadOptions = {}) {
       url: string;
       headers?: Record<string, string>;
     }> => {
+      const authHeaders = await buildAuthHeaders();
       const response = await fetch(`${basePath}/uploads/request-url`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...authHeaders,
         },
         body: JSON.stringify({
           name: file.name,
