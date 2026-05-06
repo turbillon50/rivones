@@ -3,11 +3,8 @@
 // default handler. Vercel's `@vercel/node` runtime treats an Express app
 // as a `(req, res) => void` handler natively.
 //
-// Cold-start considerations:
-// - Migrations and auto-seed run inside `index.ts`'s `app.listen` callback,
-//   NOT in `app.ts`. Importing `app.ts` directly here keeps the cold path
-//   light. Schema migrations should be run via a separate one-off command
-//   (or against the long-running staging instance) rather than per-request.
-import app from "../src/app";
+// The .js extension is required by the project's tsconfig
+// (moduleResolution: nodenext) — TypeScript types resolve from app.ts.
+import app from "../src/app.js";
 
 export default app;
