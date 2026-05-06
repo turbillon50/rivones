@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile",
+  "buildCommand": "echo 'no build step needed — @vercel/node compiles api/*.ts'",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api" }
+  ],
+  "functions": {
+    "api/index.ts": {
+      "maxDuration": 30
+    }
+  }
+}
