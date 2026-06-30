@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ApiPerfil = Record<string, any>;
 type MedicoData = {
   tipo_sangre?: string;
   alergias?: string;
@@ -21,11 +23,12 @@ export default function MedicoPage() {
 
   useEffect(() => {
     fetch("/api/perfil", { credentials:"include" })
-      .then(r => r.ok ? r.json() : {})
-      .then(d => {
-        const m = d.medico || {};
+      .then(r => r.ok ? r.json() : {} as ApiPerfil)
+      .then((d: ApiPerfil) => {
+        const m: MedicoData = (d && d.medico) ? d.medico as MedicoData : {};
         setData(m); setForm(m); setLoaded(true);
-      });
+      })
+      .catch(() => setLoaded(true));
   }, []);
 
   const save = async () => {
@@ -44,7 +47,7 @@ export default function MedicoPage() {
     <div key={key} style={{ marginBottom:"14px" }}>
       <label style={{ display:"block", color:"#6b7280", fontSize:"12px", fontWeight:"600", letterSpacing:"0.5px", marginBottom:"6px" }}>{label.toUpperCase()}</label>
       <input type={type} value={form[key] || ""} onChange={e => f(key, e.target.value)}
-        style={{ width:"100%", padding:"12px 14px", border:"1.5px solid #e5e7eb", borderRadius:"10px", fontSize:"15px", outline:"none", fontFamily:"inherit" }} />
+        style={{ width:"100%", padding:"12px 14px", border:"1.5px solid #e5e7eb", borderRadius:"10px", fontSize:"15px", outline:"none", fontFamily:"inherit", boxSizing:"border-box" }} />
     </div>
   );
 
@@ -64,11 +67,7 @@ export default function MedicoPage() {
                 <div style={{ fontSize:"42px", fontWeight:"800", color:"#dc2626" }}>{data.tipo_sangre}</div>
               </div>
             )}
-            {[
-              ["Alergias","alergias","#fef3c7","#92400e"],
-              ["Padecimientos","padecimientos","#eff6ff","#1e40af"],
-              ["Medicamentos","medicamentos","#f0fdf4","#166534"],
-            ].map(([label, key, bg, tc]) => (
+            {([["Alergias","alergias","#fef3c7","#92400e"],["Padecimientos","padecimientos","#eff6ff","#1e40af"],["Medicamentos","medicamentos","#f0fdf4","#166534"]] as const).map(([label, key, bg, tc]) => (
               data[key as keyof MedicoData] ? (
                 <div key={key} style={{ background:bg, border:`1px solid ${tc}33`, borderRadius:"12px", padding:"14px", marginBottom:"12px" }}>
                   <div style={{ fontSize:"11px", color:tc, fontWeight:"700", letterSpacing:"0.5px", marginBottom:"6px" }}>{label.toUpperCase()}</div>
