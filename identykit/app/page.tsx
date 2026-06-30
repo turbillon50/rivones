@@ -6,31 +6,21 @@ import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
 
 type Perfil = {
-  full_name?: string; curp?: string; tipo_sangre?: string;
-  alergias?: string[]; padecimientos?: string[]; medicamentos?: string[];
-  emerg_nombre?: string; emerg_relacion?: string; emerg_telefono?: string;
-  medico_cabecera?: string;
+  nombre?: string;
+  tipo_sangre?: string;
+  completado?: { personal:boolean; medico:boolean; academico:boolean; documentos:boolean; contactos:boolean; };
 };
 
-function Card({ href, icon, title, subtitle, complete }: { href:string; icon:React.ReactNode; title:string; subtitle:string; complete:boolean }) {
-  return (
-    <Link href={href} className="glass flex items-center p-4 gap-4 active:scale-[0.98] transition-transform">
-      <div className="w-11 h-11 flex items-center justify-center rounded-xl shrink-0" style={{ background:"rgba(31,209,184,0.12)", color:"var(--accent)" }}>
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-base">{title}</h3>
-        <p className="text-sm text-gray-400 truncate">{subtitle}</p>
-      </div>
-      <span className={`text-xs px-2 py-1 rounded-full shrink-0 ${complete ? "bg-emerald-500/20 text-emerald-400" : "bg-white/10 text-gray-400"}`}>
-        {complete ? "✓" : "–"}
-      </span>
-    </Link>
-  );
-}
+const CARDS = [
+  { key:"personal",    label:"Datos Personales", emoji:"👤", href:"/onboarding" },
+  { key:"medico",      label:"Médico",            emoji:"🏥", href:"/medico" },
+  { key:"academico",   label:"Académico",         emoji:"🎓", href:"/academico" },
+  { key:"documentos",  label:"Documentos",        emoji:"📄", href:"/documentos" },
+  { key:"contactos",   label:"Contactos",         emoji:"📞", href:"/contactos" },
+];
 
 export default function Home() {
-  const { user, isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, user, isLoaded } = useUser();
   const router = useRouter();
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,85 +28,89 @@ export default function Home() {
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) { router.replace("/sign-in"); return; }
-    fetch("/api/perfil").then(r => r.json()).then(d => {
-      setPerfil(d);
-      setLoading(false);
-      if (!d || !d.curp) router.replace("/onboarding");
-    });
-  }, [isSignedIn, isLoaded, router]);
+    fetch("/api/perfil", { credentials:"include" })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { setPerfil(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [isLoaded, isSignedIn]);
 
   if (!isLoaded || loading) return (
-    <div className="min-h-screen bg-bg flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin"/>
-    </div>
+    <main style={{ minHeight:"100vh", background:"#f0f4ff", display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ textAlign:"center" }}>
+        <img src="/logo.png" alt="" style={{ width:"80px", opacity:0.4 }} />
+      </div>
+    </main>
   );
 
-  const progress = (() => {
-    if (!perfil) return 0;
-    const f = [perfil.full_name, perfil.curp, perfil.tipo_sangre, perfil.alergias?.length, perfil.emerg_nombre];
-    return Math.round((f.filter(Boolean).length / f.length) * 100);
-  })();
-
-  const avatar = user?.imageUrl;
-  const initials = (user?.firstName?.[0] ?? "") + (user?.lastName?.[0] ?? "");
+  const completado = perfil?.completado;
+  const total = completado ? Object.values(completado).filter(Boolean).length : 0;
+  const pct = Math.round((total / 5) * 100);
+  const nombre = user?.firstName || "Usuario";
+  const foto = user?.imageUrl;
 
   return (
-    <main className="flex flex-col min-h-screen pb-20">
+    <main style={{ minHeight:"100vh", background:"#f0f4ff", paddingBottom:"80px" }}>
       {/* Header */}
-      <header className="glass flex items-center gap-4 p-4 mx-4 mt-4">
-        {avatar ? (
-          <img src={avatar} className="w-14 h-14 rounded-full object-cover" alt="foto"/>
-        ) : (
-          <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-semibold" style={{ background:"rgba(31,209,184,0.15)", color:"var(--accent)" }}>
-            {initials || "?"}
+      <div style={{ background:"#0D47A1", padding:"16px 20px 20px", borderBottomLeftRadius:"24px", borderBottomRightRadius:"24px" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
+          <img src="/logo.png" alt="Identy-Kit" style={{ width:"40px", height:"40px", objectFit:"contain" }} />
+          <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
+            <span style={{ color:"white", fontSize:"14px", fontWeight:"500" }}>Hola, {nombre}</span>
+            {foto && <img src={foto} alt="" style={{ width:"36px", height:"36px", borderRadius:"50%", border:"2px solid rgba(255,255,255,0.4)" }} />}
           </div>
-        )}
-        <div className="flex-1">
-          <h1 className="text-xl font-semibold" style={{ color:"var(--accent)" }}>{perfil?.full_name ?? user?.firstName}</h1>
-          <p className="text-sm text-gray-400">Carnet de Identidad Digital</p>
         </div>
-      </header>
-
-      {/* Progress */}
-      <div className="mx-4 mt-3">
-        <div className="flex items-center justify-between mb-1.5">
-          <p className="text-xs text-gray-400">Perfil completo</p>
-          <p className="text-xs font-medium" style={{ color:"var(--accent)" }}>{progress}%</p>
-        </div>
-        <div className="h-2 rounded-full overflow-hidden" style={{ background:"rgba(255,255,255,0.1)" }}>
-          <div className="h-full rounded-full transition-all duration-700"
-            style={{ width:`${progress}%`, background:"linear-gradient(90deg,#149D90,#1FD1B8,#6FF6E2)" }}/>
+        {/* Progreso */}
+        <div style={{ background:"rgba(255,255,255,0.15)", borderRadius:"12px", padding:"14px" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"8px" }}>
+            <span style={{ color:"rgba(255,255,255,0.85)", fontSize:"13px" }}>Perfil completado</span>
+            <span style={{ color:"white", fontWeight:"700", fontSize:"14px" }}>{pct}%</span>
+          </div>
+          <div style={{ background:"rgba(255,255,255,0.25)", borderRadius:"999px", height:"8px", overflow:"hidden" }}>
+            <div style={{ background:"#1FD1B8", height:"100%", width:`${pct}%`, borderRadius:"999px", transition:"width 0.4s ease" }} />
+          </div>
         </div>
       </div>
 
-      {/* Cards */}
-      <section className="flex flex-col gap-3 p-4 mt-2">
-        <Card href="/personales" title="Datos Personales" subtitle={perfil?.curp ? `CURP: ${perfil.curp.substring(0,8)}...` : "CURP, nacimiento, tipo de sangre"} complete={!!perfil?.curp}
-          icon={<svg viewBox="0 0 24 24" fill="none" className="w-6 h-6"><circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>}
-        />
-        <Card href="/medico" title="Historial Médico" subtitle={perfil?.alergias?.length ? `${perfil.alergias.length} alergias registradas` : "Alergias, vacunas, padecimientos"} complete={!!perfil?.alergias?.length}
-          icon={<svg viewBox="0 0 24 24" fill="none" className="w-6 h-6"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="2"/><path d="M12 8v8M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>}
-        />
-        <Card href="/academico" title="Historial Académico" subtitle="Escuela, grado, certificados" complete={false}
-          icon={<svg viewBox="0 0 24 24" fill="none" className="w-6 h-6"><path d="M2 9l10-5 10 5-10 5-10-5z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5" stroke="currentColor" strokeWidth="2"/></svg>}
-        />
-        <Card href="/documentos" title="Documentos" subtitle="INE, pasaporte, acta de nacimiento" complete={false}
-          icon={<svg viewBox="0 0 24 24" fill="none" className="w-6 h-6"><path d="M6 2h9l5 5v15H6V2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="M15 2v5h5" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/></svg>}
-        />
-        <Card href="/contactos" title="Contactos de Emergencia" subtitle={perfil?.emerg_nombre ? `${perfil.emerg_nombre} (${perfil.emerg_relacion})` : "Familia y médico de cabecera"} complete={!!perfil?.emerg_nombre}
-          icon={<svg viewBox="0 0 24 24" fill="none" className="w-6 h-6"><path d="M12 2L2 7v6c0 5.5 4 9.7 10 11 6-1.3 10-5.5 10-11V7l-10-5z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="M12 8v5M12 16h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>}
-        />
+      <div style={{ padding:"20px" }}>
+        <h2 style={{ color:"#0D47A1", fontSize:"16px", fontWeight:"600", marginBottom:"14px" }}>Tu identidad digital</h2>
+        
+        {/* Tarjetas */}
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"12px", marginBottom:"20px" }}>
+          {CARDS.map(c => {
+            const done = completado ? (completado as any)[c.key] : false;
+            return (
+              <Link key={c.key} href={c.href} style={{
+                background:"#ffffff", border:`1px solid ${done ? "#bbf7d0" : "#e5e7eb"}`,
+                borderRadius:"16px", padding:"16px", textDecoration:"none",
+                display:"flex", flexDirection:"column", gap:"8px",
+                boxShadow:"0 1px 4px rgba(0,0,0,0.06)"
+              }}>
+                <span style={{ fontSize:"24px" }}>{c.emoji}</span>
+                <span style={{ color:"#1a1a2e", fontWeight:"500", fontSize:"13px" }}>{c.label}</span>
+                <span style={{
+                  alignSelf:"flex-start", fontSize:"11px", fontWeight:"600",
+                  padding:"3px 10px", borderRadius:"999px",
+                  background: done ? "#dcfce7" : "#f1f5f9",
+                  color: done ? "#15803d" : "#64748b",
+                }}>
+                  {done ? "✓ Completo" : "Pendiente"}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
 
-        <Link href="/emergencia" className="glass v-pulse flex items-center justify-center gap-2 py-4 mt-2 text-base font-semibold" style={{ color:"var(--accent)" }}>
-          <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
-            <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
-            <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
-            <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
-            <path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 18v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          Generar QR de Emergencia
+        {/* Botón QR */}
+        <Link href="/emergencia" style={{
+          display:"block", background:"#0D47A1", color:"white",
+          textAlign:"center", padding:"16px", borderRadius:"14px",
+          fontWeight:"700", fontSize:"16px", textDecoration:"none",
+          boxShadow:"0 4px 16px rgba(13,71,161,0.35)"
+        }}>
+          🆘 Mi QR de Emergencia
         </Link>
-      </section>
+      </div>
+
       <BottomNav />
     </main>
   );
