@@ -5,13 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
 
-type Perfil = {
-  nombre?: string;
-  tipo_sangre?: string;
-  completado?: { personal:boolean; medico:boolean; academico:boolean; documentos:boolean; contactos:boolean; };
-};
+type Completado = { personal:boolean; medico:boolean; academico:boolean; documentos:boolean; contactos:boolean; };
+type Perfil = { nombre?:string; medico?:Record<string,unknown>; completado?:Completado; progreso?:number; };
 
-const CARDS = [
+const CARDS: { key: keyof Completado; label:string; emoji:string; href:string; }[] = [
   { key:"personal",    label:"Datos Personales", emoji:"👤", href:"/onboarding" },
   { key:"medico",      label:"Médico",            emoji:"🏥", href:"/medico" },
   { key:"academico",   label:"Académico",         emoji:"🎓", href:"/academico" },
@@ -32,25 +29,21 @@ export default function Home() {
       .then(r => r.ok ? r.json() : null)
       .then(d => { setPerfil(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, router]);
 
   if (!isLoaded || loading) return (
     <main style={{ minHeight:"100vh", background:"#f0f4ff", display:"flex", alignItems:"center", justifyContent:"center" }}>
-      <div style={{ textAlign:"center" }}>
-        <img src="/logo.png" alt="" style={{ width:"80px", opacity:0.4 }} />
-      </div>
+      <img src="/logo.png" alt="" style={{ width:"80px", opacity:0.4 }} />
     </main>
   );
 
   const completado = perfil?.completado;
-  const total = completado ? Object.values(completado).filter(Boolean).length : 0;
-  const pct = Math.round((total / 5) * 100);
+  const pct = perfil?.progreso ?? 0;
   const nombre = user?.firstName || "Usuario";
   const foto = user?.imageUrl;
 
   return (
     <main style={{ minHeight:"100vh", background:"#f0f4ff", paddingBottom:"80px" }}>
-      {/* Header */}
       <div style={{ background:"#0D47A1", padding:"16px 20px 20px", borderBottomLeftRadius:"24px", borderBottomRightRadius:"24px" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
           <img src="/logo.png" alt="Identy-Kit" style={{ width:"40px", height:"40px", objectFit:"contain" }} />
@@ -59,7 +52,6 @@ export default function Home() {
             {foto && <img src={foto} alt="" style={{ width:"36px", height:"36px", borderRadius:"50%", border:"2px solid rgba(255,255,255,0.4)" }} />}
           </div>
         </div>
-        {/* Progreso */}
         <div style={{ background:"rgba(255,255,255,0.15)", borderRadius:"12px", padding:"14px" }}>
           <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"8px" }}>
             <span style={{ color:"rgba(255,255,255,0.85)", fontSize:"13px" }}>Perfil completado</span>
@@ -70,14 +62,11 @@ export default function Home() {
           </div>
         </div>
       </div>
-
       <div style={{ padding:"20px" }}>
         <h2 style={{ color:"#0D47A1", fontSize:"16px", fontWeight:"600", marginBottom:"14px" }}>Tu identidad digital</h2>
-        
-        {/* Tarjetas */}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"12px", marginBottom:"20px" }}>
           {CARDS.map(c => {
-            const done = completado ? (completado as any)[c.key] : false;
+            const done = completado ? completado[c.key] : false;
             return (
               <Link key={c.key} href={c.href} style={{
                 background:"#ffffff", border:`1px solid ${done ? "#bbf7d0" : "#e5e7eb"}`,
@@ -99,8 +88,6 @@ export default function Home() {
             );
           })}
         </div>
-
-        {/* Botón QR */}
         <Link href="/emergencia" style={{
           display:"block", background:"#0D47A1", color:"white",
           textAlign:"center", padding:"16px", borderRadius:"14px",
@@ -110,7 +97,6 @@ export default function Home() {
           🆘 Mi QR de Emergencia
         </Link>
       </div>
-
       <BottomNav />
     </main>
   );
