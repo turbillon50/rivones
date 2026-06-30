@@ -3,42 +3,34 @@ import { SignUp } from "@clerk/nextjs";
 
 const appearance = {
   variables: {
-    colorPrimary: "#1FD1B8",
-    colorBackground: "#0d0d14",
-    colorInputBackground: "#1a1a2e",
-    colorInputText: "#ffffff",
-    colorText: "#ffffff",
-    colorTextSecondary: "#9ca3af",
+    colorPrimary: "#0D47A1",
+    colorBackground: "#ffffff",
+    colorText: "#1a1a2e",
+    colorTextSecondary: "#6b7280",
     borderRadius: "12px",
-    fontFamily: "system-ui, sans-serif",
+    fontFamily: "system-ui, -apple-system, sans-serif",
+    fontSize: "16px",
   },
   elements: {
-    card: "bg-transparent shadow-none border-0",
-    headerTitle: "text-white text-2xl font-bold",
-    headerSubtitle: "text-gray-400",
-    formButtonPrimary: "bg-[#1FD1B8] hover:bg-[#149D90] text-black font-bold rounded-xl",
-    formFieldInput: "bg-white/10 border border-white/20 text-white rounded-xl focus:border-[#1FD1B8]",
-    formFieldLabel: "text-gray-300",
-    footerActionLink: "text-[#1FD1B8] hover:text-[#4FF0D8]",
-    dividerLine: "bg-white/20",
-    dividerText: "text-gray-500",
-    rootBox: "w-full",
+    rootBox: { width: "100%" },
+    card: { boxShadow: "0 4px 24px rgba(0,0,0,0.08)", border: "1px solid #e5e7eb", borderRadius: "16px" },
+    headerTitle: { color: "#0D47A1", fontSize: "22px", fontWeight: "700" },
+    headerSubtitle: { color: "#6b7280" },
+    formButtonPrimary: { backgroundColor: "#0D47A1", borderRadius: "10px", fontWeight: "600", fontSize: "16px" },
+    formFieldInput: { borderRadius: "10px", borderColor: "#d1d5db", fontSize: "16px" },
+    formFieldLabel: { color: "#374151", fontWeight: "500" },
+    footerActionLink: { color: "#0D47A1", fontWeight: "600" },
   }
 };
 
 export default function SignUpPage() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-bg px-4">
-      <div className="mb-8 flex flex-col items-center">
-        <img
-          src="/logo.png"
-          alt="Identy-Kit"
-          width="180"
-          height="180"
-          style={{ objectFit:"contain", mixBlendMode:"screen", filter:"drop-shadow(0 0 20px rgba(31,209,184,0.4))" }}
-        />
+    <main style={{ minHeight:"100vh", background:"#f0f4ff", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"24px" }}>
+      <div style={{ marginBottom:"32px", display:"flex", flexDirection:"column", alignItems:"center", gap:"8px" }}>
+        <img src="/logo.png" alt="Identy-Kit" style={{ width:"160px", height:"160px", objectFit:"contain" }} />
+        <p style={{ color:"#0D47A1", fontSize:"13px", letterSpacing:"2px", fontWeight:"500", textAlign:"center" }}>TU IDENTIDAD, SEGURA EN UN QR</p>
       </div>
-      <div className="w-full max-w-sm glass rounded-2xl p-1">
+      <div style={{ width:"100%", maxWidth:"400px" }}>
         <SignUp appearance={appearance} />
       </div>
     </main>
