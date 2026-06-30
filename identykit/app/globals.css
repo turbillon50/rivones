@@ -4,17 +4,15 @@
 
 :root {
   --bg: #08080c;
+  --bg-light: #f0f4ff;
   --accent: #1FD1B8;
-  --accent-dark: #149D90;
-  --glass-bg: rgba(255, 255, 255, 0.06);
-  --glass-border: rgba(255, 255, 255, 0.12);
+  --navy: #0D47A1;
+  --navy-dark: #0a3880;
+  --glass-bg: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.12);
 }
 
-html, body {
-  background-color: var(--bg);
-  color: #eaeaea;
-  min-height: 100vh;
-}
+html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
 
 .glass {
   backdrop-filter: blur(16px) saturate(140%);
@@ -24,24 +22,11 @@ html, body {
   border-radius: 1rem;
 }
 
-.halo {
-  position: fixed;
-  top: -20%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 140vw;
-  height: 60vh;
-  background: radial-gradient(ellipse at center, rgba(31,209,184,0.18) 0%, rgba(31,209,184,0) 70%);
-  pointer-events: none;
-  z-index: 0;
+.card-light {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
-@keyframes v-pulse {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
-}
-.v-pulse { animation: v-pulse 2.4s ease-in-out infinite; }
-
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--accent-dark); border-radius: 3px; }
+* { box-sizing: border-box; }
